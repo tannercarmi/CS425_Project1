@@ -2,82 +2,116 @@ var Lab4 = (function () {
 
     var rates = null;
 
-    var convert = function () {
-        
-        var date = rates["date"];
-        
-        var usd_value = Number($("#usd_value").val());
-        var usd_rate = Number(rates["rates"]["USD"]);
-        var target_currency = $("#target_currency").val();
-        var target_rate = Number(rates["rates"][target_currency]);
-        
-        var usd_to_eur = usd_value / usd_rate;
-        var final_result = usd_to_eur * target_rate;
+    var createCurrencyMenu = function (currencies) {
 
-        var usd_value_string = (usd_value).toLocaleString('en-US', {
+        $("#currencylist").append("<select title=\"currencymenu\" id=\"currencymenu\">" + "</select name>");
+        
+        currencies.forEach(element => {
+            $("#currencymenu").append("<option value=\"" + element['id'] + "\">" + element['id'] + " (" + element['description'] + ")");
+        });
+    };
+
+    var convert = function (rate_date) {
+
+        //log all rates to console
+        for (const key in rates) {
+            console.log(key + "----" + rates[key]);
+        }
+
+        var input_usd = $("#usd_value").val();
+        var input_eur = convertToEruo(input_usd);
+        var targetCurrency = $("#currencymenu").val().trim();
+        var targetRate = rates[targetCurrency];
+        var result;
+
+        var formatterForTarget = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: targetCurrency,
+        });
+
+        result = formatterForTarget.format(targetRate * input_eur);
+
+        var formatterUSD = new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
         });
-        var result_string = (final_result).toLocaleString('en-US', {
-            style: 'currency',
-            currency: target_currency,
-        });
-        $("#output").append("<p>The equivalent of " + usd_value_string + " in " + target_currency + " for the date " + date + " is: " + result_string + "</p>");
 
+        $("#output").html("The equivalent of " + formatterUSD.format(input_usd) + " in " + targetCurrency + " for the date " + rate_date + " is: " + result);
+    
     };
 
-    var getRatesAndConvert = function (rate_date, key) {
+    var getRatesAndConvert = function (key, rate_date) {
 
         console.log("Getting rates for " + rate_date + " ...");
-        
-        var ajaxURL = 'http://localhost:8180/CS425_Project1/rate?date=' + rate_date + '&key=' + key;
-        
+
+        var url = 'http://localhost:8180/CS425_Project1/RatesServlet/';
+
+        url += rate_date;
+        url += "?key=";
+        url += key;
+
+        console.log("custom url----  " + url);
+
         $.ajax({
-            url: ajaxURL,
+            url: url,
             method: 'GET',
             dataType: 'json',
-            success: function (data) {
-                rates = data;
-                convert();
-            },
-            error: function(xhr, statusText, response) {
-                alert("Error!");
-                $("output").html(response);
-                
+            success: function (response) {
+                rates = response.rates;
+                convert(rate_date);
+
             }
-        });
+        })
+
 
     };
 
+    function convertToEruo(usd) {
+        usd_rate = rates['USD'];
+        eur = usd / usd_rate;
+        return eur;
+    };
+
+
     return {
+
+        getCurrenciesList: function () {
+
+            $.ajax({
+                url: 'http://localhost:8180/CS425_Project1/CurrenciesServlet',
+                method: 'GET',
+                dataType: 'json',
+                success: function (response) {
+
+                    createCurrencyMenu(response);
+
+                }
+            })
+        },
 
         onClick: function () {
 
             var rate_date = $("#rate_date").val();
-            var key = $("#access_key").val();
+            var key = $('#apikey').val();
 
-            if (key === "") {
-                alert("You must enter a valid key!");
+            if (rate_date === "") {
+                alert("Please enter or select a date in the \"Date\" field!");
             }
             else {
-                if (rate_date === "") {
-                    alert("Please enter or select a date in the \"Date\" field!");
+
+                // if rates have not been retrieved yet, or if the date is different, fetch new rates
+
+                if ((rates === null) || (rate_date !== rates["date"])) {
+                    getRatesAndConvert(key, rate_date);
                 }
+
+                // if rates for the selected date are already available, perform the conversion
+
                 else {
-
-
-                    if ((rates === null) || (rate_date !== rates["date"])) {
-                        getRatesAndConvert(rate_date, key);
-                    }
-
-
-                    else {
-                        convert();
-                    }
-
+                    convert(rate_date);
                 }
+
             }
-            
 
         }
 

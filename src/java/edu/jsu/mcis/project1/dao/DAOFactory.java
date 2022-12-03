@@ -47,12 +47,15 @@ public class DAOFactory {
         return new RatesDAO(this);
     }
     
-    public MenuDAO getMenuDAO() {
-        return new MenuDAO(this);
-    }
-    
     public UsersDAO getUsersDAO() {
         return new UsersDAO(this);
+    }
+    public CurrencyDAO getCurrencyDAO() {
+        return new CurrencyDAO(this);
+    }
+
+    public UserAccessDAO getUserAccesDAO() {
+        return new UserAccessDAO(this);
     }
 
 }

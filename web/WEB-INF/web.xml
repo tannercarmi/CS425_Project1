@@ -4,10 +4,17 @@
         <servlet-name>RatesServlet</servlet-name>
         <servlet-class>edu.jsu.mcis.project1.RatesServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>CurrenciesServlet</servlet-name>
+        <servlet-class>edu.jsu.mcis.project1.CurrenciesServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>RatesServlet</servlet-name>
-        <url-pattern>/rate</url-pattern>
-        <url-pattern>/rate/*</url-pattern>
+        <url-pattern>/RatesServlet/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>CurrenciesServlet</servlet-name>
+        <url-pattern>/CurrenciesServlet</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

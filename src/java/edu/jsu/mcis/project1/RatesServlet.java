@@ -7,14 +7,18 @@ package edu.jsu.mcis.project1;
 
 import edu.jsu.mcis.project1.dao.DAOFactory;
 import edu.jsu.mcis.project1.dao.RatesDAO;
-import edu.jsu.mcis.project1.dao.UsersDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.swing.text.html.parser.DTD;
 
 /**
  *
@@ -31,22 +35,6 @@ public class RatesServlet extends HttpServlet {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet RatesServlet</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet RatesServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
@@ -60,6 +48,7 @@ public class RatesServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
         DAOFactory daoFactory = null;
 
         ServletContext context = request.getServletContext();
@@ -68,86 +57,65 @@ public class RatesServlet extends HttpServlet {
             System.err.println("*** Creating new DAOFactory ...");
             daoFactory = new DAOFactory();
             context.setAttribute("daoFactory", daoFactory);
-        }
+        } 
         else {
             daoFactory = (DAOFactory) context.getAttribute("daoFactory");
         }
         
         response.setContentType("application/json; charset=UTF-8");
-        
-        try ( PrintWriter out = response.getWriter()) {
+
+        try (PrintWriter out = response.getWriter()) {
             
-            String uri = request.getRequestURI();
-            String[] path = uri.split("/");
-        
-            String date = request.getParameter("date");         
-            String currency = request.getParameter("currency");
-            String key = request.getParameter("key");
-            
-            if (path.length >= 4) { date = path[3]; }
-            if (path.length >= 5) { currency = path[4]; }
-                                    
-            RatesDAO dao = daoFactory.getRatesDAO();
-            UsersDAO userDAO = daoFactory.getUsersDAO();
-            
-            boolean noCurrency = currency == null || "".equals(currency);
-            boolean noDate = date == null || "".equals(date);
-            boolean noKey = key == null || "".equals(key);
-            
-            
-            if (!noKey) {
-                int access_count = userDAO.getAccessCount(key);
-                if (access_count >= 10 || access_count == -1) {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    out.println("{\"message\": \"You have exceeded the maximum number of requests per day.\",\"success\": false}");                 
-                }
- 
+            // Checks for key parameter
+            if (request.getParameterMap().containsKey("key")) {
+
+                String uri = request.getPathInfo();
+                String[] path;
+                String key = request.getParameter("key");
+
+                if (uri != null) {
+                    
+                    path = uri.split("/");
+                    String date;
+                    String currency;
+
+                    RatesDAO dao = daoFactory.getRatesDAO();
+
+                    int lengthOfPath = path.length;
+
+                    switch (lengthOfPath) {
+                        case 2:
+                            date = path[1];
+                            out.println(dao.find(key, date));
+                            break;
+                        case 3:
+                            date = path[1];
+                            currency = path[2];
+
+                            out.println(dao.findByDateCurrency(key, date, currency));
+                            break;
+                    }
+                } 
                 else {
-                    if (noCurrency && noDate) { 
-                        out.println(dao.list());
-                    }
-                    else if (noCurrency && !noDate) {
-                        out.println(dao.list(date));
-                    }
-                    else {
-                        out.println(dao.list(currency, date));
-                    }
+                    RatesDAO dao = daoFactory.getRatesDAO();
+                    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                    LocalDateTime now = LocalDateTime.now();
+                    LocalDate currentDate = now.toLocalDate();
+
+                    System.out.println("Todays date --------------> " + currentDate.toString());
+
+                    out.println(dao.find(key, currentDate.toString()));
                 }
-            }
+
+            } 
             else {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                out.println("{\"message\": \"This API requires a valid access key.\", \"success\": false}");
+                out.println("NO ACCESS KEY PROVIDED");
             }
             
-            
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-    }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
     }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
 
 }

@@ -4,25 +4,6 @@
     Author     : tanto
 --%>
 
-<%@page import="edu.jsu.mcis.project1.dao.*"%>
-<%@page import="edu.jsu.mcis.project1.*"%>
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%
-    DAOFactory daoFactory = null;
-    ServletContext context = request.getServletContext();
-    if (context.getAttribute("daoFactory") == null) {
-        System.err.println("*** Creating new DAOFactory ...");
-        daoFactory = new DAOFactory();
-        context.setAttribute("daoFactory", daoFactory);
-    }
-    else {
-        daoFactory = (DAOFactory) context.getAttribute("daoFactory");
-    }
-    
-    MenuDAO menuDAO = daoFactory.getMenuDAO();
-        
-%>
-
 <!DOCTYPE html>
 <html>
 
@@ -33,33 +14,37 @@
     <script type="text/javascript" src="Scripts/jquery-3.6.1.min.js"></script>
 </head>
     <body>
-
+        
         <form name="calculatorform" id="calculatorform">
 
-            <fieldset>
+        <fieldset>
 
-                <legend>Currency Conversion Calculator</legend>
+            <legend>Currency Conversion Calculator</legend>
 
-                <p>Convert to: 
-                    <%= menuDAO.getCurrencyListAsHTML() %>
-                <p>
-                    <label for="usd_value">Value (in USD):</label>
-                    <input type="number" name="usd_value" id="usd_value">
+            <p>Convert to: <span id="currencylist"></span></p>
 
-                    <label for="rate_date">Date:</label>
-                    <input type="date" name="rate_date" id="rate_date">
-                
-                    <label for="access_key">Access Key:</label>
-                    <input type="text" name="access_key" id="access_key">
-                </p>
+            <p>
+                <label for="usd_value">Value (in USD):</label>
+                <input type="number" name="usd_value" id="usd_value">
 
-                <p><input type="button" value="Convert" onclick="Lab4.onClick();"></p>
+                <label for="rate_date">Date:</label>
+                <input type="date" name="rate_date" id="rate_date">
 
-            </fieldset>
+                <label for="apikey">API Key:</label>
+                <input name="apikey" id="apikey">
+            </p>
 
-        </form>
+            <p><input type="button" value="Convert" onclick="Lab4.onClick();"></p>
+
+        </fieldset>
+
+    </form>
 
     <div id="output"></div>
 
-</body>
+    <script type="text/javascript">
+    Lab4.getCurrenciesList(); /* uncomment this in Part Two */
+    </script>
+
+    </body>
 </html>
