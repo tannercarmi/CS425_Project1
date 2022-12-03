@@ -13,30 +13,30 @@ var Lab4 = (function () {
 
     var convert = function (rate_date) {
 
-        //log all rates to console
+        //log rates to console
         for (const key in rates) {
             console.log(key + "----" + rates[key]);
         }
 
-        var input_usd = $("#usd_value").val();
-        var input_eur = convertToEruo(input_usd);
-        var targetCurrency = $("#currencymenu").val().trim();
-        var targetRate = rates[targetCurrency];
+        var usd_value = $("#usd_value").val();
+        var usd_to_eur = convertToEuro(usd_value);
+        var target_currency = $("#currencymenu").val().trim();
+        var target_rate = rates[target_currency];
         var result;
 
-        var formatterForTarget = new Intl.NumberFormat('en-US', {
+        var result_string = new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: targetCurrency,
+            currency: target_currency,
         });
 
-        result = formatterForTarget.format(targetRate * input_eur);
+        result = result_string.format(target_rate * usd_to_eur);
 
-        var formatterUSD = new Intl.NumberFormat('en-US', {
+        var usd_value_string = new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
         });
 
-        $("#output").html("The equivalent of " + formatterUSD.format(input_usd) + " in " + targetCurrency + " for the date " + rate_date + " is: " + result);
+        $("#output").html("The equivalent of " + usd_value_string.format(usd_value) + " in " + target_currency + " for the date " + rate_date + " is: " + result);
     
     };
 
@@ -63,10 +63,9 @@ var Lab4 = (function () {
             }
         })
 
-
     };
 
-    function convertToEruo(usd) {
+    function convertToEuro(usd) {
         usd_rate = rates['USD'];
         eur = usd / usd_rate;
         return eur;
@@ -99,13 +98,13 @@ var Lab4 = (function () {
             }
             else {
 
-                // if rates have not been retrieved yet, or if the date is different, fetch new rates
+                // if rates not retrieved yet, or if date is different, fetch new rates
 
                 if ((rates === null) || (rate_date !== rates["date"])) {
                     getRatesAndConvert(key, rate_date);
                 }
 
-                // if rates for the selected date are already available, perform the conversion
+                // if rates available, perform the conversion
 
                 else {
                     convert(rate_date);
